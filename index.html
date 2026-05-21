@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SWL Timesheet Adjustment</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#e8ede7;min-height:100vh}
+.pg{padding:14px;max-width:900px;margin:0 auto}
+.hero{background:#163022;border-radius:16px;display:flex;align-items:center;padding:18px 22px;margin-bottom:14px;gap:14px}
+.hero-icon{width:46px;height:46px;background:rgba(125,203,168,.18);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hero-icon i{font-size:24px;color:#7dcba8}
+.hero-body{flex:1}
+.hero-co{font-size:10px;font-weight:700;color:#7dcba8;letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px}
+.hero-h1{font-size:18px;font-weight:700;color:#fff;margin-bottom:2px}
+.hero-sub{font-size:11px;color:#9dbdad}
+.hero-end{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.cloud-badge{font-size:10px;font-weight:600;color:#7dcba8;display:flex;align-items:center;gap:4px;margin-top:4px}
+.pill{background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);border-radius:40px;padding:7px 14px;color:#fff;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s;white-space:nowrap}
+.pill:hover{background:rgba(255,255,255,.2)}
+.pill i{color:#7dcba8;font-size:15px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.lcard{background:#fff;border:1px solid #d3dcd3;border-radius:14px;padding:22px 18px;cursor:pointer;transition:all .18s;text-align:center}
+.lcard:hover{border-color:#7a1e2e;box-shadow:0 2px 12px rgba(122,30,46,.12)}
+.lico{width:50px;height:50px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.lico.m{background:#e2f0e6}.lico.h{background:#fde8e8}
+.lico.m i{color:#163022;font-size:24px}.lico.h i{color:#7a1e2e;font-size:24px}
+.lcard h3{font-size:14px;font-weight:700;color:#1a241a;margin-bottom:4px}
+.lcard p{font-size:11px;color:#6b7c6b;line-height:1.5}
+.stepper{display:flex;align-items:center;background:#fff;border-radius:12px;padding:10px 14px;margin-bottom:12px;border:1px solid #d3dcd3}
+.st{display:flex;align-items:center;gap:6px;flex:1}
+.dot{width:26px;height:26px;border-radius:50%;border:2px solid #c5d3c5;background:#f3f6f3;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#8a9e8a;flex-shrink:0;transition:all .2s}
+.dot.act{border-color:#7a1e2e;background:#7a1e2e;color:#fff}
+.dot.done{border-color:#163022;background:#e2f0e6;color:#163022}
+.slbl{font-size:11px;color:#6b7c6b;font-weight:500}
+.slbl.act{color:#7a1e2e;font-weight:700}.slbl.done{color:#163022}
+.sline{flex:1;height:2px;background:#dce6dc;border-radius:2px;margin:0 7px;transition:background .2s}
+.sline.done{background:#163022}
+.card{background:#fff;border:1px solid #d3dcd3;border-radius:14px;padding:16px 18px;margin-bottom:11px}
+.card-hd{font-size:10px;font-weight:700;color:#163022;text-transform:uppercase;letter-spacing:.09em;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.card-hd i{color:#7a1e2e;font-size:14px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:10px;font-weight:700;color:#4d5e4d;text-transform:uppercase;letter-spacing:.05em}
+.req{color:#b83232}
+input,select,textarea{width:100%;font-size:13px;padding:8px 10px;border:1.5px solid #cdd8cd;border-radius:8px;background:#fff;color:#1a241a;outline:none;font-family:inherit;transition:border .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{border-color:#7a1e2e;box-shadow:0 0 0 3px rgba(122,30,46,.09)}
+input[readonly]{background:#f3f6f3;color:#6b7c6b}
+textarea{resize:vertical;min-height:56px;line-height:1.5}
+.sig-wrap{border:1.5px solid #cdd8cd;border-radius:8px;overflow:hidden}
+.sig-bar{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#f3f6f3;border-bottom:1px solid #dce6dc}
+.sig-bar span{font-size:11px;color:#6b7c6b}
+.clr-btn{background:none;border:none;font-size:11px;color:#b83232;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:3px}
+canvas{display:block;cursor:crosshair;touch-action:none;background:#fff;width:100%;height:100px}
+.sig-msg{font-size:11px;margin-top:4px;min-height:16px}
+.foot{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.btn-back{background:#fff;border:1.5px solid #c5d3c5;color:#4d5e4d;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:all .15s}
+.btn-back:hover{background:#f3f6f3}
+.btn-p{background:#7a1e2e;border:none;color:#fff;padding:9px 19px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:background .15s}
+.btn-p:hover{background:#951f2e}
+.btn-p:disabled{opacity:.5;cursor:not-allowed}
+.btn-g{background:#163022;border:none;color:#fff;padding:9px 19px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px}
+.btn-g:hover{background:#0e2018}
+.done-ring{width:52px;height:52px;background:#e2f0e6;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 11px}
+.done-ring i{font-size:25px;color:#163022}
+.done-box{text-align:center;padding:22px 10px}
+.done-box h2{font-size:15px;font-weight:700;color:#1a241a;margin-bottom:4px}
+.done-box p{font-size:12px;color:#6b7c6b;line-height:1.6;margin-bottom:14px}
+.act-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.btn-act{padding:9px 14px;font-size:12px;font-weight:700;border-radius:8px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px}
+.info-note{background:#fff;border:1px solid #d3dcd3;border-radius:12px;padding:12px 14px;display:flex;gap:8px;align-items:flex-start}
+.pin-card{background:#fff;border:1px solid #d3dcd3;border-radius:14px;padding:28px 24px;max-width:340px;margin:0 auto;text-align:center}
+.pin-card h2{font-size:15px;font-weight:700;color:#1a241a;margin-bottom:4px}
+.pin-card p{font-size:12px;color:#6b7c6b;margin-bottom:18px;line-height:1.5}
+.pin-roles{display:flex;gap:8px;margin-bottom:16px}
+.pin-role{flex:1;padding:9px;border:1.5px solid #cdd8cd;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;background:#f3f6f3;color:#4d5e4d;transition:all .15s;text-align:center}
+.pin-role.sel{background:#163022;color:#fff;border-color:#163022}
+.pin-wrap{display:flex;gap:10px;justify-content:center;margin-bottom:14px}
+.pin-d{width:44px;height:52px;border:1.5px solid #cdd8cd;border-radius:9px;font-size:22px;font-weight:700;text-align:center;background:#fff;color:#1a241a;outline:none;font-family:inherit;transition:border .15s}
+.pin-d:focus{border-color:#7a1e2e;box-shadow:0 0 0 3px rgba(122,30,46,.09)}
+.pin-err{font-size:12px;color:#b83232;margin-bottom:10px;min-height:18px}
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tab{flex:1;padding:8px;font-size:11px;font-weight:700;border:1.5px solid #cdd8cd;border-radius:8px;background:#f3f6f3;color:#6b7c6b;cursor:pointer;text-align:center;font-family:inherit;transition:all .15s}
+.tab.on{background:#163022;color:#fff;border-color:#163022}
+.rec{background:#fff;border:1px solid #d3dcd3;border-radius:12px;padding:12px 14px;margin-bottom:9px}
+.rec-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.rec-name{font-size:13px;font-weight:700;color:#1a241a}
+.rec-meta{font-size:11px;color:#6b7c6b;margin-top:2px;line-height:1.5}
+.badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.bpending{background:#fff3cd;color:#7d6008}
+.bapproved{background:#e2f0e6;color:#163022}
+.bdenied{background:#fde8e8;color:#7a1e2e}
+.rgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:8px 0;border-top:1px solid #eaf1ea;border-bottom:1px solid #eaf1ea;margin-bottom:8px}
+.rf label{font-size:10px;color:#8a9e8a;text-transform:uppercase;letter-spacing:.05em;font-weight:700;display:block;margin-bottom:2px}
+.rf span{font-size:12px;color:#1a241a;font-weight:500}
+.hr-area{background:#f3f6f3;border-radius:8px;padding:10px 12px;border:1px solid #dce6dc}
+.hr-lbl{font-size:10px;font-weight:700;color:#163022;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.hr-g2{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px}
+.hr-btns{display:flex;gap:7px;flex-wrap:wrap}
+.btn-app{padding:7px 12px;font-size:11px;font-weight:700;border:1.5px solid #163022;border-radius:7px;background:#fff;color:#163022;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px}
+.btn-app:hover{background:#e2f0e6}
+.btn-den{padding:7px 12px;font-size:11px;font-weight:700;border:1.5px solid #7a1e2e;border-radius:7px;background:#fff;color:#7a1e2e;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px}
+.btn-den:hover{background:#fde8e8}
+.btn-dl{padding:7px 12px;font-size:11px;font-weight:700;border:none;border-radius:7px;background:#163022;color:#fff;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px}
+.btn-dl:hover{background:#0e2018}
+.appr-box{background:#e2f0e6;border-radius:7px;padding:9px 11px;font-size:11px;color:#163022;line-height:1.8;font-weight:500}
+.deny-box{background:#fde8e8;border-radius:7px;padding:9px 11px;font-size:11px;color:#7a1e2e;line-height:1.8;font-weight:500}
+.empty{text-align:center;padding:2rem 1rem;color:#8a9e8a;font-size:13px}
+.empty i{font-size:32px;display:block;margin-bottom:8px;color:#c5d3c5}
+.loading{text-align:center;padding:2rem;color:#6b7c6b;font-size:13px}
+.loading i{font-size:28px;display:block;margin-bottom:8px;color:#7dcba8;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.52);align-items:center;justify-content:center;padding:16px;z-index:100}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:14px;border:1px solid #d3dcd3;padding:20px;width:100%;max-width:300px}
+.modal h3{font-size:14px;font-weight:700;color:#1a241a;margin-bottom:3px}
+.modal p{font-size:12px;color:#6b7c6b;margin-bottom:12px;line-height:1.5}
+.modal-btns{display:flex;gap:7px;margin-top:11px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#163022;color:#fff;font-size:12px;font-weight:600;padding:9px 18px;border-radius:9px;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;z-index:999}
+</style>
+</head>
+<body>
+<div class="pg">
+
+<div class="overlay" id="mgrOverlay">
+  <div class="modal">
+    <h3>Manager sign-in</h3>
+    <p>Your name is logged with every submission this session.</p>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="fg"><label>Full name <span class="req">*</span></label><input id="mgrName" type="text" placeholder="Your full name"></div>
+      <div class="fg"><label>Title</label><select id="mgrTitle"><option>Field Supervisor</option><option>Branch Manager</option><option>Operations Manager</option><option>Division Lead</option></select></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-back" style="flex:1;justify-content:center" onclick="closeMgr()">Cancel</button>
+      <button class="btn-p" style="flex:1;justify-content:center" onclick="saveMgr()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="hero-icon"><i class="ti ti-clock-edit"></i></div>
+  <div class="hero-body">
+    <div class="hero-co">Southwest Landscape Inc.</div>
+    <div class="hero-h1">Timesheet adjustment</div>
+    <div class="hero-sub">Missed punch correction &middot; Submit &middot; Review &middot; Approve</div>
+    <div class="cloud-badge"><i class="ti ti-cloud"></i> Live cloud sync &mdash; saves across all devices</div>
+  </div>
+  <div class="hero-end">
+    <button class="pill" onclick="goHome()" id="homeBtn" style="display:none"><i class="ti ti-home"></i><span>Home</span></button>
+    <button class="pill" onclick="openMgr()" id="mgrPill"><i class="ti ti-user-circle"></i><span id="mgrLbl">Manager sign-in</span></button>
+  </div>
+</div>
+
+<div id="vLanding">
+  <div class="grid2">
+    <div class="lcard" onclick="startManager()"><div class="lico m"><i class="ti ti-clipboard-list"></i></div><h3>Submit a request</h3><p>For managers &mdash; submit a missed punch correction on behalf of an employee</p></div>
+    <div class="lcard" onclick="showPin()"><div class="lico h"><i class="ti ti-shield-lock"></i></div><h3>HR portal</h3><p>For HR and payroll &mdash; review, approve, and download submissions</p></div>
+  </div>
+  <div class="info-note"><i class="ti ti-cloud-check" style="color:#163022;font-size:16px;flex-shrink:0;margin-top:1px"></i><span style="font-size:12px;color:#4d5e4d;line-height:1.6"><strong>Cloud connected &mdash;</strong> All submissions save instantly and are visible to HR regardless of which device or browser managers use.</span></div>
+</div>
+
+<div id="vManager" style="display:none">
+  <div class="stepper"><div class="st"><div class="dot act" id="d1">1</div><span class="slbl act" id="l1">Employee</span></div><div class="sline" id="ln1"></div><div class="st"><div class="dot" id="d2">2</div><span class="slbl" id="l2">Punch details</span></div><div class="sline" id="ln2"></div><div class="st"><div class="dot" id="d3">3</div><span class="slbl" id="l3">Sign &amp; submit</span></div></div>
+  <div id="p1">
+    <div class="card"><div class="card-hd"><i class="ti ti-user"></i> Employee information</div>
+      <div class="g2">
+        <div class="fg"><label>Employee name <span class="req">*</span></label><input id="empName" type="text" placeholder="Full name"></div>
+        <div class="fg"><label>Branch <span class="req">*</span></label><select id="branch"><option value="">Select&hellip;</option><option>OC</option><option>LA</option><option>Enhancements</option><option>IE</option></select></div>
+        <div class="fg" style="grid-column:1/-1"><label>Division <span class="req">*</span></label><select id="division"><option value="">Select&hellip;</option><option>Maintenance</option><option>Enhancements</option><option>Trees</option><option>Office Staff</option></select></div>
+      </div>
+    </div>
+    <div class="foot"><div></div><button class="btn-p" onclick="go(2)">Next <i class="ti ti-arrow-right"></i></button></div>
+  </div>
+  <div id="p2" style="display:none">
+    <div class="card"><div class="card-hd"><i class="ti ti-clock"></i> Missed punch details</div>
+      <div class="g3" style="margin-bottom:10px">
+        <div class="fg"><label>Date <span class="req">*</span></label><input id="punchDate" type="date"></div>
+        <div class="fg"><label>Punch type <span class="req">*</span></label><select id="punchType" onchange="toggleOut()"><option value="">Select&hellip;</option><option>Clock In</option><option>Clock Out</option><option>Clock In &amp; Clock Out</option><option>Break Start</option><option>Break End</option></select></div>
+        <div class="fg"><label id="inLbl">Correct time <span class="req">*</span></label><input id="timeIn" type="time"></div>
+      </div>
+      <div id="outRow" style="display:none;margin-bottom:10px"><div class="fg"><label>Clock out time <span class="req">*</span></label><input id="timeOut" type="time"></div></div>
+      <div class="fg"><label>Reason <span class="req">*</span></label><textarea id="reason" placeholder="Brief description of why the punch was missed&hellip;"></textarea></div>
+    </div>
+    <div class="foot"><button class="btn-back" onclick="go(1)"><i class="ti ti-arrow-left"></i> Back</button><button class="btn-p" onclick="go(3)">Next <i class="ti ti-arrow-right"></i></button></div>
+  </div>
+  <div id="p3" style="display:none">
+    <div class="card"><div class="card-hd"><i class="ti ti-signature"></i> Employee signature</div>
+      <p style="font-size:12px;color:#6b7c6b;margin-bottom:10px;line-height:1.5">By signing, the employee confirms the above information is accurate.</p>
+      <div class="sig-wrap"><div class="sig-bar"><span><i class="ti ti-pencil" style="font-size:12px"></i> Sign with mouse or finger</span><button class="clr-btn" onclick="clearSig()"><i class="ti ti-eraser"></i> Clear</button></div><canvas id="sigCanvas"></canvas></div>
+      <div class="sig-msg" id="sigMsg"></div>
+    </div>
+    <div class="card" style="background:#f3f6f3"><div class="card-hd"><i class="ti ti-user-check"></i> Submitted by</div>
+      <div class="g2"><div class="fg"><label>Manager name</label><input id="mgrShow" type="text" readonly placeholder="Sign in above &rarr;"></div><div class="fg"><label>Title</label><input id="mgrTitleShow" type="text" readonly placeholder="&mdash;"></div></div>
+    </div>
+    <div class="foot"><button class="btn-back" onclick="go(2)"><i class="ti ti-arrow-left"></i> Back</button><button class="btn-p" id="submitBtn" onclick="submitForm()"><i class="ti ti-send"></i> Submit request</button></div>
+  </div>
+</div>
+
+<div id="vDone" style="display:none">
+  <div class="card"><div class="done-box"><div class="done-ring"><i class="ti ti-circle-check"></i></div><h2>Request submitted!</h2><p id="doneMsg">Saved to cloud. HR will be notified.</p>
+    <div class="act-row">
+      <button class="btn-act btn-g" onclick="dlPDF()"><i class="ti ti-file-type-pdf"></i> Download PDF</button>
+      <button class="btn-act" style="background:#fff;border:1.5px solid #c5d3c5;color:#1a241a" onclick="emailHR()"><i class="ti ti-mail"></i> Email HR</button>
+      <button class="btn-act btn-p" onclick="newReq()"><i class="ti ti-plus"></i> New request</button>
+      <button class="btn-act" style="background:#e2f0e6;border:none;color:#163022;font-weight:700" onclick="goHome()"><i class="ti ti-home"></i> Back to home</button>
+    </div>
+  </div></div>
+</div>
+
+<div id="vPin" style="display:none">
+  <div class="pin-card">
+    <div style="width:46px;height:46px;background:#fde8e8;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><i class="ti ti-shield-lock" style="font-size:22px;color:#7a1e2e"></i></div>
+    <h2>HR portal login</h2><p>Select your role and enter your 4-digit PIN</p>
+    <div class="pin-roles"><button class="pin-role sel" id="roleHR" onclick="selRole('hr')">HR Admin</button><button class="pin-role" id="rolePayroll" onclick="selRole('payroll')">Payroll</button></div>
+    <div class="pin-wrap">
+      <input class="pin-d" id="pin0" type="password" maxlength="1" inputmode="numeric" oninput="pinMove(0)" onkeydown="pinBack(event,0)">
+      <input class="pin-d" id="pin1" type="password" maxlength="1" inputmode="numeric" oninput="pinMove(1)" onkeydown="pinBack(event,1)">
+      <input class="pin-d" id="pin2" type="password" maxlength="1" inputmode="numeric" oninput="pinMove(2)" onkeydown="pinBack(event,2)">
+      <input class="pin-d" id="pin3" type="password" maxlength="1" inputmode="numeric" oninput="pinMove(3)" onkeydown="pinBack(event,3)">
+    </div>
+    <div class="pin-err" id="pinErr"></div>
+    <button class="btn-p" style="width:100%;justify-content:center" onclick="checkPin()"><i class="ti ti-login"></i> Enter portal</button>
+    <button class="btn-back" style="width:100%;justify-content:center;margin-top:8px" onclick="goHome()"><i class="ti ti-arrow-left"></i> Back to home</button>
+  </div>
+</div>
+
+<div id="vPortal" style="display:none">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div><div style="font-size:10px;font-weight:700;color:#7a1e2e;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">HR portal</div><div style="font-size:15px;font-weight:700;color:#1a241a" id="portalWelcome">Welcome</div></div>
+      <div style="display:flex;gap:7px">
+        <button class="btn-back" onclick="loadAndRender()"><i class="ti ti-refresh"></i> Refresh</button>
+        <button class="btn-back" onclick="goHome()"><i class="ti ti-home"></i> Home</button>
+        <button class="btn-back" onclick="hrLogout()"><i class="ti ti-logout"></i> Sign out</button>
+      </div>
+    </div>
+    <div class="tabs"><button class="tab on" id="tPend" onclick="switchTab('pending')"><i class="ti ti-clock"></i> Pending</button><button class="tab" id="tAll" onclick="switchTab('all')"><i class="ti ti-list"></i> All submissions</button></div>
+    <div id="logArea"></div>
+  </div>
+</div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const BIN='6a0e805fee5a733b12f3dd19';
+const KEY='$2a$10$CUIBvyfvB7rhDH3pL/s2uu9MnQl7f3EonjqQyRhkV/C9Vvsx3Usze';
+const URL_BIN='https://api.jsonbin.io/v3/b/'+BIN;
+const PINS={hr:'1672',payroll:'1470'},ROLES={hr:'HR Admin (David)',payroll:'Payroll'},HR_EMAIL='david@southwestlandscapeinc.com';
+let last=null,mgr={name:'',title:''},hasSig=false,curTab='pending',hrSession=null,pinRole='hr',cloudRecs=[];
+
+async function getRecs(){const r=await fetch(URL_BIN,{headers:{'X-Master-Key':KEY}});const d=await r.json();return Array.isArray(d.record)?d.record:[];}
+async function putRecs(arr){await fetch(URL_BIN,{method:'PUT',headers:{'X-Master-Key':KEY,'Content-Type':'application/json'},body:JSON.stringify(arr)});}
+
+function showView(id){['vLanding','vManager','vDone','vPin','vPortal'].forEach(v=>document.getElementById(v).style.display=v===id?'block':'none');}
+function goHome(){showView('vLanding');document.getElementById('mgrPill').style.display='flex';document.getElementById('homeBtn').style.display='none';}
+function openMgr(){document.getElementById('mgrOverlay').classList.add('open');}
+function closeMgr(){document.getElementById('mgrOverlay').classList.remove('open');}
+function saveMgr(){const n=document.getElementById('mgrName').value.trim();if(!n){document.getElementById('mgrName').focus();return;}mgr.name=n;mgr.title=document.getElementById('mgrTitle').value;document.getElementById('mgrLbl').textContent=n;document.getElementById('mgrShow').value=n;document.getElementById('mgrTitleShow').value=mgr.title;closeMgr();}
+function startManager(){showView('vManager');document.getElementById('mgrPill').style.display='flex';document.getElementById('homeBtn').style.display='flex';go(1);}
+
+function go(n){
+  if(n===2){const v=['empName','branch','division'];for(const id of v){if(!gv(id)){document.getElementById(id).focus();toast('Complete all employee fields.');return;}}}
+  if(n===3){const v=['punchDate','punchType','timeIn','reason'];for(const id of v){if(!gv(id)){document.getElementById(id).focus();toast('Complete all punch fields.');return;}}if(gv('punchType')==='Clock In & Clock Out'&&!gv('timeOut')){toast('Enter clock out time.');return;}}
+  [1,2,3].forEach(i=>{document.getElementById('p'+i).style.display=i===n?'block':'none';document.getElementById('d'+i).className='dot'+(i===n?' act':i<n?' done':'');document.getElementById('l'+i).className='slbl'+(i===n?' act':i<n?' done':'');if(i<3)document.getElementById('ln'+i).className='sline'+(i<n?' done':'');});
+}
+function toggleOut(){const t=gv('punchType');document.getElementById('outRow').style.display=t==='Clock In & Clock Out'?'block':'none';document.getElementById('inLbl').innerHTML=(t==='Clock In & Clock Out'?'Clock in time':'Correct time')+' <span class="req">*</span>';}
+
+const cv=document.getElementById('sigCanvas');cv.width=800;cv.height=120;
+const cx=cv.getContext('2d');cx.strokeStyle='#163022';cx.lineWidth=2;cx.lineCap='round';cx.lineJoin='round';
+let drw=false;
+function sp(e){const r=cv.getBoundingClientRect();const s=e.touches?e.touches[0]:e;return{x:(s.clientX-r.left)*(cv.width/r.width),y:(s.clientY-r.top)*(cv.height/r.height)};}
+cv.addEventListener('mousedown',e=>{drw=true;const p=sp(e);cx.beginPath();cx.moveTo(p.x,p.y)});
+cv.addEventListener('mousemove',e=>{if(!drw)return;const p=sp(e);cx.lineTo(p.x,p.y);cx.stroke();markSig();});
+cv.addEventListener('mouseup',()=>drw=false);cv.addEventListener('mouseleave',()=>drw=false);
+cv.addEventListener('touchstart',e=>{e.preventDefault();drw=true;const p=sp(e);cx.beginPath();cx.moveTo(p.x,p.y);},{passive:false});
+cv.addEventListener('touchmove',e=>{e.preventDefault();if(!drw)return;const p=sp(e);cx.lineTo(p.x,p.y);cx.stroke();markSig();},{passive:false});
+cv.addEventListener('touchend',()=>drw=false);
+function markSig(){hasSig=true;document.getElementById('sigMsg').innerHTML='<span style="color:#163022;font-weight:600"><i class="ti ti-check"></i> Signature captured</span>';}
+function clearSig(){cx.clearRect(0,0,cv.width,cv.height);hasSig=false;document.getElementById('sigMsg').innerHTML='';}
+function getSigCompressed(){const t=document.createElement('canvas');t.width=300;t.height=75;t.getContext('2d').drawImage(cv,0,0,300,75);return t.toDataURL('image/jpeg',0.5);}
+function gv(id){return document.getElementById(id).value.trim();}
+
+async function submitForm(){
+  if(!hasSig){toast('Employee signature required.');return;}
+  if(!mgr.name){toast('Please sign in as manager first.');openMgr();return;}
+  const btn=document.getElementById('submitBtn');btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> Saving...';
+  const rec={id:'ADJ-'+Date.now().toString().slice(-6),empName:gv('empName'),branch:gv('branch'),division:gv('division'),punchDate:gv('punchDate'),punchType:gv('punchType'),timeIn:gv('timeIn'),timeOut:gv('timeOut')||'',reason:gv('reason'),mgr:mgr.name,mgrTitle:mgr.title,sig:getSigCompressed(),submitted:new Date().toLocaleString(),status:'Pending',empId:'',hrName:'',hrAt:''};
+  try{const ex=await getRecs();ex.unshift(rec);await putRecs(ex);cloudRecs=ex;last=rec;document.getElementById('doneMsg').textContent='Request '+rec.id+' saved to cloud. HR can now see and approve it.';showView('vDone');document.getElementById('mgrPill').style.display='none';document.getElementById('homeBtn').style.display='none';}
+  catch(e){toast('Save failed — check internet connection.');btn.disabled=false;btn.innerHTML='<i class="ti ti-send"></i> Submit request';}
+}
+function newReq(){
+  ['empName','punchDate','timeIn','timeOut','reason'].forEach(id=>document.getElementById(id).value='');
+  ['branch','division','punchType'].forEach(id=>document.getElementById(id).selectedIndex=0);
+  document.getElementById('outRow').style.display='none';clearSig();last=null;
+  const btn=document.getElementById('submitBtn');btn.disabled=false;btn.innerHTML='<i class="ti ti-send"></i> Submit request';
+  document.getElementById('mgrPill').style.display='flex';document.getElementById('homeBtn').style.display='flex';
+  showView('vManager');go(1);
+}
+
+function showPin(){['pin0','pin1','pin2','pin3'].forEach(id=>document.getElementById(id).value='');document.getElementById('pinErr').textContent='';selRole('hr');showView('vPin');document.getElementById('mgrPill').style.display='none';document.getElementById('homeBtn').style.display='none';setTimeout(()=>document.getElementById('pin0').focus(),100);}
+function selRole(r){pinRole=r;document.getElementById('roleHR').className='pin-role'+(r==='hr'?' sel':'');document.getElementById('rolePayroll').className='pin-role'+(r==='payroll'?' sel':'');}
+function pinMove(i){const v=document.getElementById('pin'+i).value;if(v&&i<3)document.getElementById('pin'+(i+1)).focus();if(v&&i===3)checkPin();}
+function pinBack(e,i){if(e.key==='Backspace'&&!document.getElementById('pin'+i).value&&i>0)document.getElementById('pin'+(i-1)).focus();}
+function checkPin(){
+  const entered=['pin0','pin1','pin2','pin3'].map(id=>document.getElementById(id).value).join('');
+  if(entered.length<4)return;
+  if(entered===PINS[pinRole]){hrSession={role:pinRole,name:ROLES[pinRole]};document.getElementById('portalWelcome').textContent='Welcome, '+ROLES[pinRole];document.getElementById('pinErr').textContent='';document.getElementById('homeBtn').style.display='flex';document.getElementById('mgrPill').style.display='none';showView('vPortal');loadAndRender();}
+  else{document.getElementById('pinErr').textContent='Incorrect PIN. Please try again.';['pin0','pin1','pin2','pin3'].forEach(id=>document.getElementById(id).value='');document.getElementById('pin0').focus();}
+}
+function hrLogout(){hrSession=null;goHome();}
+function switchTab(t){curTab=t;document.getElementById('tPend').className='tab'+(t==='pending'?' on':'');document.getElementById('tAll').className='tab'+(t==='all'?' on':'');renderLog();}
+
+async function loadAndRender(){
+  document.getElementById('logArea').innerHTML='<div class="loading"><i class="ti ti-loader-2"></i>Loading submissions...</div>';
+  try{cloudRecs=await getRecs();renderLog();}
+  catch(e){document.getElementById('logArea').innerHTML='<div class="empty"><i class="ti ti-wifi-off"></i>Could not load — check connection.</div>';}
+}
+
+function renderLog(){
+  const el=document.getElementById('logArea');
+  const list=curTab==='pending'?cloudRecs.filter(r=>r.status==='Pending'):cloudRecs;
+  if(!list.length){el.innerHTML='<div class="empty"><i class="ti ti-clipboard-x"></i>'+(curTab==='pending'?'No pending requests.':'No submissions yet.')+'</div>';return;}
+  el.innerHTML=list.map(r=>{
+    const i=cloudRecs.indexOf(r);const bc='b'+r.status.toLowerCase();
+    return`<div class="rec"><div class="rec-top"><div><div class="rec-name">${r.empName}</div><div class="rec-meta">${r.branch} &middot; ${r.division} &middot; ${r.submitted}</div><div class="rec-meta">By: <strong>${r.mgr}</strong> (${r.mgrTitle})</div></div><span class="badge ${bc}">${r.status}</span></div>
+    <div class="rgrid"><div class="rf"><label>Date</label><span>${fd(r.punchDate)}</span></div><div class="rf"><label>Type</label><span>${r.punchType}</span></div><div class="rf"><label>Time</label><span>${ft(r.timeIn)}${r.timeOut?' &ndash; '+ft(r.timeOut):''}</span></div><div class="rf" style="grid-column:1/-1"><label>Reason</label><span>${r.reason}</span></div></div>
+    <div class="hr-area"><div class="hr-lbl"><i class="ti ti-shield-check" style="font-size:11px"></i> HR review</div>
+    ${r.status==='Pending'?`<div class="hr-g2"><div class="fg"><label>Employee ID <span class="req">*</span></label><input type="text" id="eid_${i}" placeholder="e.g. EMP-0042"></div><div class="fg"><label>Approver name <span class="req">*</span></label><input type="text" id="hrn_${i}" value="${hrSession?hrSession.name:''}" placeholder="Your name"></div></div><div class="hr-btns"><button class="btn-app" onclick="hrAct(${i},'Approved')"><i class="ti ti-check"></i> Approve</button><button class="btn-den" onclick="hrAct(${i},'Denied')"><i class="ti ti-x"></i> Deny</button></div>`
+    :r.status==='Approved'?`<div class="appr-box"><i class="ti ti-circle-check"></i> <strong>Approved</strong><br>Employee ID: <strong>${r.empId}</strong><br>Approved by: <strong>${r.hrName}</strong><br>Date &amp; time: ${r.hrAt}</div><div class="hr-btns" style="margin-top:8px"><button class="btn-dl" onclick="dlPDFRec(${i})"><i class="ti ti-file-type-pdf"></i> Download PDF</button></div>`
+    :`<div class="deny-box"><i class="ti ti-circle-x"></i> <strong>Denied</strong><br>Reviewed by: <strong>${r.hrName}</strong><br>Date &amp; time: ${r.hrAt}</div>`}
+    </div></div>`;
+  }).join('');
+}
+
+async function hrAct(i,status){
+  const eid=document.getElementById('eid_'+i).value.trim();const hrn=document.getElementById('hrn_'+i).value.trim();
+  if(!eid){toast('Enter employee ID.');return;}if(!hrn){toast('Enter approver name.');return;}
+  cloudRecs[i].status=status;cloudRecs[i].empId=eid;cloudRecs[i].hrName=hrn;cloudRecs[i].hrAt=new Date().toLocaleString();
+  renderLog();try{await putRecs(cloudRecs);toast(status==='Approved'?'Approved and saved.':'Denied and saved.');}catch(e){toast('Cloud save failed.');}
+}
+
+function dlPDF(){if(last)buildPDF(last);}
+function dlPDFRec(i){buildPDF(cloudRecs[i]);}
+function buildPDF(r){
+  const{jsPDF}=window.jspdf;const doc=new jsPDF({unit:'pt',format:'letter'});const W=612,mg=50;
+  doc.setFillColor(22,48,34);doc.rect(0,0,W,76,'F');doc.setFont('helvetica','bold');doc.setFontSize(19);doc.setTextColor(255,255,255);doc.text('Southwest Landscape Inc.',mg,30);doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(125,203,168);doc.text('Timesheet Adjustment Request - Missed Punch Correction',mg,49);doc.setFontSize(8.5);doc.setTextColor(180,220,200);doc.text('Request ID: '+r.id+'   |   Submitted: '+r.submitted,mg,64);
+  let y=96;
+  const sec=t=>{doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(22,48,34);doc.text(t.toUpperCase(),mg,y);doc.setDrawColor(122,30,46);doc.setLineWidth(.5);doc.line(mg,y+3,W-mg,y+3);y+=15;};
+  const row=(l,v)=>{doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.setTextColor(80,80,80);doc.text(l,mg,y);doc.setFont('helvetica','normal');doc.setTextColor(20,20,20);doc.text(String(v||'-'),mg+145,y);y+=15;};
+  sec('Employee information');row('Employee name:',r.empName);row('Branch:',r.branch);row('Division:',r.division);y+=5;
+  sec('Missed punch details');row('Date:',fd(r.punchDate));row('Punch type:',r.punchType);row('Time (in):',ft(r.timeIn));if(r.timeOut)row('Time (out):',ft(r.timeOut));y+=5;
+  sec('Reason');doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(20,20,20);const lines=doc.splitTextToSize(r.reason,W-mg*2);doc.text(lines,mg,y);y+=lines.length*13+8;
+  sec('Submitted by');row('Manager:',r.mgr+' - '+r.mgrTitle);y+=5;
+  sec('Employee signature');try{doc.addImage(r.sig,'JPEG',mg,y,210,56);doc.setDrawColor(200,200,200);doc.rect(mg,y,210,56);}catch(e){}y+=70;
+  if(r.status!=='Pending'){sec('HR approval');row('Employee ID:',r.empId);row('Status:',r.status);row('Approved by:',r.hrName);row('Date & time:',r.hrAt);}
+  doc.setFont('helvetica','italic');doc.setFontSize(8);doc.setTextColor(150,150,150);doc.line(mg,748,W-mg,748);doc.text('Submitted '+r.submitted+' by '+r.mgr+' ('+r.mgrTitle+').',mg,760);
+  doc.save('SWL_Adj_'+r.empName.replace(/ /g,'_')+'_'+(r.punchDate||'nodate')+'.pdf');toast('PDF downloaded!');
+}
+function emailHR(){
+  if(!last){toast('Submit a request first.');return;}const r=last;
+  const sub=encodeURIComponent('Timesheet Adjustment - '+r.empName+' - '+fd(r.punchDate)+' ['+r.id+']');
+  const body=encodeURIComponent('Timesheet Adjustment Request\nRequest ID: '+r.id+'\n\nEmployee: '+r.empName+'\nBranch: '+r.branch+' | Division: '+r.division+'\nDate: '+fd(r.punchDate)+' | Type: '+r.punchType+'\nTime: '+ft(r.timeIn)+(r.timeOut?' - '+ft(r.timeOut):'')+'\n\nReason: '+r.reason+'\n\nSubmitted by: '+r.mgr+' ('+r.mgrTitle+')\nSubmitted: '+r.submitted);
+  window.open('mailto:'+HR_EMAIL+'?subject='+sub+'&body='+body);
+}
+function fd(d){if(!d)return'-';const[y,m,day]=d.split('-');return m+'/'+day+'/'+y;}
+function ft(t){if(!t)return'-';const[h,m]=t.split(':');const hr=+h;return(hr%12||12)+':'+m+' '+(hr>=12?'PM':'AM');}
+let tt;
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.opacity='1';clearTimeout(tt);tt=setTimeout(()=>el.style.opacity='0',2800);}
+</script>
+</body>
+</html>
